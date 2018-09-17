@@ -1,69 +1,97 @@
-// Example testing sketch for various DHT humidity/temperature sensors
-// Written by ladyada, public domain
-
+// библиотека для работы с GPRS устройством
+#include <GPRS_Shield_Arduino.h>
+#include <SoftwareSerial.h>
 #include "DHT.h"
 
-#define DHTPIN 4     // what digital pin we're connected to
+// длина сообщения
+#define MESSAGE_LENGTH 1
 
-// Uncomment whatever type you're using!
-//#define DHTTYPE DHT11   // DHT 11
-#define DHTTYPE DHT21   // DHT 22  (AM2302), AM2321
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
+#define DHTPIN 12
 
-// Connect pin 1 (on the left) of the sensor to +5V
-// NOTE: If using a board with 3.3V logic like an Arduino Due connect pin 1
-// to 3.3V instead of 5V!
-// Connect pin 2 of the sensor to whatever your DHTPIN is
-// Connect pin 4 (on the right) of the sensor to GROUND
-// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+#define DHTTYPE DHT21
 
-// Initialize DHT sensor.
-// Note that older versions of this library took an optional third parameter to
-// tweak the timings for faster processors.  This parameter is no longer needed
-// as the current DHT reading algorithm adjusts itself to work on faster procs.
+// номер на который будем отправлять сообщение
+#define PHONE_NUMBER  "+79090520560"
+ 
+// номер сообщения в памяти сим-карты
+int messageIndex = 0;
+ 
+// текст сообщения
+char smsmessage[MESSAGE_LENGTH];
+// номер, с которого пришло сообщение
+char phone[16];
+// дата отправки сообщения
+char datetime[24];
+
+
+
 DHT dht(DHTPIN, DHTTYPE);
 
-void setup() {
+SoftwareSerial gprsSerial(10, 11);
+ 
+// создаём объект класса GPRS и передаём в него объект Serial1 
+//GPRS gprs(gprsSerial);
+// можно указать дополнительные параметры — пины PK и ST
+// по умолчанию: PK = 2, ST = 3
+GPRS gprs(gprsSerial, 2, 3);
+ 
+void setup()
+{
+  // открываем последовательный порт для мониторинга действий в программе
   Serial.begin(9600);
-  Serial.println("DHTxx test!");
+  // ждём пока не откроется монитор последовательного порта
+  // для того, чтобы отследить все события в программе
+  while (!Serial) {
+  }
+  Serial.print("Serial init OK\r\n");
 
   dht.begin();
-}
-
-void loop() {
-  // Wait a few seconds between measurements.
-  delay(2000);
-
-  // Reading temperature or humidity takes about 250 milliseconds!
-  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-  float h = dht.readHumidity();
-  // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
-  // Read temperature as Fahrenheit (isFahrenheit = true)
-  float f = dht.readTemperature(true);
-
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println("Failed to read from DHT sensor!");
-    return;
+  // открываем Serial-соединение с GPRS Shield
+  gprsSerial.begin(9600);
+  // включаем GPRS-шилд
+  gprs.powerOn();
+  // проверяем, есть ли связь с GPRS-устройством
+  while (!gprs.init()) {
+    // если связи нет, ждём 1 секунду
+    // и выводим сообщение об ошибке;
+    // процесс повторяется в цикле,
+    // пока не появится ответ от GPRS-устройства
+    delay(1000);
+    Serial.print("GPRS Init error\r\n");
   }
+  // выводим сообщение об удачной инициализации GPRS Shield
+  Serial.println("GPRS init success");
+  Serial.println("Please send SMS message to me!");
+}
+ 
+void loop()
+{
+  // если пришло новое сообщение
+  if (gprs.ifSMSNow()) {
+    // читаем его
+    gprs.readSMS(smsmessage, phone, datetime);
+    Serial.println(smsmessage);
 
-  // Compute heat index in Fahrenheit (the default)
-  float hif = dht.computeHeatIndex(f, h);
-  // Compute heat index in Celsius (isFahreheit = false)
-  float hic = dht.computeHeatIndex(t, h, false);
+    if(strcmp(smsmessage, "0") == 0) {
 
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.print(" %\t");
-  Serial.print("Temperature: ");
-  Serial.print(t);
-  Serial.print(" *C ");
-  Serial.print(f);
-  Serial.print(" *F\t");
-  Serial.print("Heat index: ");
-  Serial.print(hic);
-  Serial.print(" *C ");
-  Serial.print(hif);
-  Serial.println(" *F");
+      //read temperature from dht21
+      delay(1000);
+      float t = dht.readTemperature();
+    
+      // Check if any reads failed and exit early (to try again).
+      if (isnan(t)) {
+        Serial.println("Failed to read from DHT sensor!");
+        return;
+      }
+
+
+      //convert float temperature to char array for sending
+      String messageObj = String (t);
+      char message[5];
+      messageObj.toCharArray(message, 5);
+
+      //send sms with temperature
+      gprs.sendSMS(PHONE_NUMBER, message);
+    }
+  }
 }
