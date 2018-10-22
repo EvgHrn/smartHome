@@ -1,18 +1,19 @@
 // библиотека для работы с GPRS устройством
 #include <GPRS_Shield_Arduino.h>
 //#include <SoftwareSerial.h>
-#include "DHT.h"
+//#include "DHT.h"
+#include <TroykaDHT.h>
 
 // длина сообщения
 #define MESSAGE_LENGTH 1
 
-#define DHTPIN 12
+#define DHTPIN2 9
 
-#define DHTTYPE DHT21
+#define DHTTYPE1 DHT22
 
-#define DHTPIN2 13
+#define DHTPIN1 8
 
-#define DHTTYPE2 DHT22
+#define DHTTYPE2 DHT21
 
 // номер на который будем отправлять сообщение
 #define PHONE_NUMBER  "+79090520560"
@@ -29,7 +30,7 @@ char datetime[24];
 
 
 
-DHT dht(DHTPIN, DHTTYPE);
+DHT dht1(DHTPIN1, DHTTYPE1);
 DHT dht2(DHTPIN2, DHTTYPE2);
 
 //SoftwareSerial gprsSerial(10, 11);
@@ -39,7 +40,12 @@ DHT dht2(DHTPIN2, DHTTYPE2);
 // можно указать дополнительные параметры — пины PK и ST
 // по умолчанию: PK = 2, ST = 3
 GPRS gprs(Serial);
-GPRS gprs2(Serial);
+
+unsigned long previousMillis = 0;
+const long interval = 60000;
+
+float t1;
+float t2;
  
 void setup()
 {
@@ -53,7 +59,7 @@ void setup()
   }
   //Serial.print("Serial init OK\r\n");
 
-  dht.begin();
+  dht1.begin();
   dht2.begin();
   // открываем Serial-соединение с GPRS Shield
 //  gprsSerial.begin(9600);
@@ -75,6 +81,15 @@ void setup()
  
 void loop()
 {
+
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    t1 = getTemp1();
+    t2 = getTemp2();
+  }
+  
   // если пришло новое сообщение
   if (gprs.ifSMSNow()) {
     // читаем его
@@ -83,26 +98,10 @@ void loop()
 
     if(strcmp(smsmessage, "0") == 0) {
 
-      //read temperature from dht21
-      delay(1000);
-      float t1 = dht.readTemperature();
-      delay(1000);
-      float t2 = dht2.readTemperature();
-      // Check if any reads failed and exit early (to try again).
-      if (isnan(t1)) {
-        //Serial.println("Failed to read from DHT sensor!");
-        t1 = 99.99;
-      }
-
-      if (isnan(t2)) {
-        //Serial.println("Failed to read from DHT sensor!");
-        t2 = 99.99;
-      }
-
       //convert float temperature to char array for sending
-      String messageObj = String ("t1: ") + String (t1) + String (" t2: ") + String (t2);
-      char message[20];
-      messageObj.toCharArray(message, 20);
+      String messageObj = String ("Dom: ") + String (t1) + String ("\r\nPodval: ") + String (t2);
+      char message[30];
+      messageObj.toCharArray(message, 30);
 
 //      Serial.print(message);
 
@@ -110,4 +109,72 @@ void loop()
       gprs.sendSMS(PHONE_NUMBER, message);
     }
   }
+}
+
+float getTemp1()
+{
+  dht1.read();
+  switch(dht1.getState()) {
+    // всё OK
+    case DHT_OK:
+      // выводим показания влажности и температуры
+//      Serial.print("Temperature = ");
+//      Serial.print(dht1.getTemperatureC());
+//      Serial.println(" C \t");
+//      Serial.print("Humidity = ");
+//      Serial.print(dht1.getHumidity());
+//      Serial.println(" %");
+        return dht1.getTemperatureC();
+      break;
+    // ошибка контрольной суммы
+    case DHT_ERROR_CHECKSUM:
+//      Serial.println("Checksum 1 error");
+      return 99.99;
+      break;
+    // превышение времени ожидания
+    case DHT_ERROR_TIMEOUT:
+//      Serial.println("Time out 1 error");
+      return 99.99;
+      break;
+    // данных нет, датчик не реагирует или отсутствует
+    case DHT_ERROR_NO_REPLY:
+//      Serial.println("Sensor 1 not connected");
+      return 99.99;
+      break;
+  }
+//  delay(2000);
+}
+
+float getTemp2()
+{
+  dht2.read();
+  switch(dht2.getState()) {
+    // всё OK
+    case DHT_OK:
+      // выводим показания влажности и температуры
+//      Serial.print("Temperature = ");
+//      Serial.print(dht2.getTemperatureC());
+//      Serial.println(" C \t");
+//      Serial.print("Humidity = ");
+//      Serial.print(dht2.getHumidity());
+//      Serial.println(" %");
+      return dht2.getTemperatureC();
+      break;
+    // ошибка контрольной суммы
+    case DHT_ERROR_CHECKSUM:
+//      Serial.println("Checksum 2 error");
+      return 99.99;
+      break;
+    // превышение времени ожидания
+    case DHT_ERROR_TIMEOUT:
+//      Serial.println("Time out 2 error");
+      return 99.99;
+      break;
+    // данных нет, датчик не реагирует или отсутствует
+    case DHT_ERROR_NO_REPLY:
+//      Serial.println("Sensor 2 not connected");
+      return 99.99;
+      break;
+  }
+//  delay(2000);
 }
