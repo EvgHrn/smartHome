@@ -1,7 +1,4 @@
-// библиотека для работы с GPRS устройством
 #include <GPRS_Shield_Arduino.h>
-//#include <SoftwareSerial.h>
-//#include "DHT.h"
 #include <TroykaDHT.h>
 
 // длина сообщения
@@ -59,8 +56,9 @@ void setup()
   }
   //Serial.print("Serial init OK\r\n");
 
-  dht1.begin();
-  dht2.begin();
+  dht1_init();
+  dht2_init();
+  
   // открываем Serial-соединение с GPRS Shield
 //  gprsSerial.begin(9600);
   // включаем GPRS-шилд
@@ -129,16 +127,19 @@ float getTemp1()
     // ошибка контрольной суммы
     case DHT_ERROR_CHECKSUM:
 //      Serial.println("Checksum 1 error");
+      dht1_init();
       return 99.99;
       break;
     // превышение времени ожидания
     case DHT_ERROR_TIMEOUT:
 //      Serial.println("Time out 1 error");
+      dht1_init();
       return 99.99;
       break;
     // данных нет, датчик не реагирует или отсутствует
     case DHT_ERROR_NO_REPLY:
 //      Serial.println("Sensor 1 not connected");
+      dht1_init();
       return 99.99;
       break;
   }
@@ -163,18 +164,31 @@ float getTemp2()
     // ошибка контрольной суммы
     case DHT_ERROR_CHECKSUM:
 //      Serial.println("Checksum 2 error");
+      dht2_init();
       return 99.99;
       break;
     // превышение времени ожидания
     case DHT_ERROR_TIMEOUT:
 //      Serial.println("Time out 2 error");
+      dht2_init();
       return 99.99;
       break;
     // данных нет, датчик не реагирует или отсутствует
     case DHT_ERROR_NO_REPLY:
 //      Serial.println("Sensor 2 not connected");
+      dht2_init();
       return 99.99;
       break;
   }
 //  delay(2000);
+}
+
+void dht1_init(void)
+{
+  dht1.begin();
+}
+
+void dht2_init(void)
+{
+  dht2.begin();
 }
