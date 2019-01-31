@@ -2,10 +2,9 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import PouchDB from 'pouchdb';
 PouchDB.plugin(require('pouchdb-find'));
+import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
 
-require('dotenv').config();
-
-let remote_db = new PouchDB(`http://${process.env.DB_LOG}:${process.env.DB_PASS}@${process.env.DB_IP}:${process.env.DB_PORT}/smarthome`);
+let remote_db = new PouchDB(`http://${DB_LOG}:${DB_PASS}@${DB_IP}:${DB_PORT}/smarthome`);
 let local_db = new PouchDB('smarthomeDb');
 
 export default class App extends React.Component {

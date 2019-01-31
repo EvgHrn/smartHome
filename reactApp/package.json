@@ -7,7 +7,6 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "dotenv": "^6.2.0",
     "expo": "^32.0.0",
     "pouchdb": "^7.0.0",
     "pouchdb-find": "^7.0.0",
@@ -15,7 +14,8 @@
     "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz"
   },
   "devDependencies": {
-    "babel-preset-expo": "^5.0.0"
+    "babel-preset-expo": "^5.0.0",
+    "react-native-dotenv": "^0.2.0"
   },
   "private": true
 }
