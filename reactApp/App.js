@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import PouchDB from 'pouchdb-react-native';
 import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
+import PureChart from 'react-native-pure-chart';
 
 const lastDataCount = 300;
 
@@ -11,7 +12,11 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: []
+      data: [{
+        timestamp:"",
+        temperature: "",
+        humidity: ""
+      }]
     };
   }
 
@@ -59,8 +64,8 @@ export default class App extends React.Component {
           data: allDocs
         }
       ));
-      console.log('New state:');
-      console.log(this.state.data);
+      console.log('State updated');
+      // console.log(this.state.data);
     }.bind(this));
   }
 
@@ -71,9 +76,18 @@ export default class App extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text>Date</Text>
-        <Text>Temperature</Text>
-        <Text>Humidity</Text>
+        <Text style={styles.header}>Date</Text>
+        <Text>{this.state.data[0].timestamp}</Text>
+        <Text style={styles.header}>Temperature</Text>
+        <Text>{this.state.data[0].temperature}</Text>
+        <Text style={styles.header}>Humidity</Text>
+        <Text>{this.state.data[0].humidity}</Text>
+        <PureChart
+          type='line'
+          // data={ [ 50, 10, 40, 95, -4, -24, 85, 91, 35, 53, -53, 24, 50, -20, -80 ] }
+          data={ this.state.data.map((item) => Math.round(item.temperature)) }
+        >
+        </PureChart >
       </View>
     );
   }
@@ -86,4 +100,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  header: {
+    color: 'gray'
+  }
 });

@@ -14,7 +14,9 @@
     "pouchdb-react-native": "^6.4.1",
     "react": "16.5.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
-    "react-native-config": "^0.11.7"
+    "react-native-config": "^0.11.7",
+    "react-native-pure-chart": "0.0.24",
+    "react-native-svg-charts": "^5.2.0"
   },
   "devDependencies": {
     "babel-preset-expo": "^5.0.0",

@@ -146,7 +146,7 @@ String getTimestamp() {
     // configure traged server and url
 
 
-    http.begin(client, "http://qrlogadmin:qrlogadminpass@77.220.212.42:5984");
+    http.begin(client, "http://log:pass@serv:port");
 
     /*
       // or
@@ -212,7 +212,7 @@ void sendData(String timestamp, float temp, float hum) {
     Serial.print("[HTTP] begin...\n");
     // configure traged server and url
 
-    String url = String("http://qrlogadmin:qrlogadminpass@77.220.212.42:5984/smarthome/") + String(sha1(timestamp.c_str()));
+    String url = String("http://log:pass@serv:port/smarthome/") + String(sha1(timestamp.c_str()));
 
     http.begin(client, url.c_str());
 
