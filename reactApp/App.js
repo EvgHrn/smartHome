@@ -4,8 +4,39 @@ import PouchDB from 'pouchdb';
 PouchDB.plugin(require('pouchdb-find'));
 import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
 
+const lastDataCount = 300;
+
 let remote_db = new PouchDB(`http://${DB_LOG}:${DB_PASS}@${DB_IP}:${DB_PORT}/smarthome`);
 let local_db = new PouchDB('smarthomeDb');
+
+let getLastData = () => {
+  local_db.allDocs({
+    include_docs: true,
+    attachments: false
+  }, function(err, response) {
+    if (err) { return console.log(err); }
+    // handle result
+    let allDocs = response.rows.map((currentValue, index, array) => {
+      let resultObj = {
+        timestamp: currentValue.doc.timestamp,
+        temperature: currentValue.doc.temperature,
+        humidity: currentValue.doc.humidity,
+      };
+      return resultObj;
+    });
+    //lets sort by timestamp desc
+    allDocs.sort((a, b) => {
+      let dateA = new Date(a.date);
+      let dateB = new Date(b.date);
+      return dateB - dateA;
+    });
+    //get just peace of data
+    if (allDocs.length > lastDataCount) {
+      allDocs.splice(lastDataCount);
+    }
+    return allDocs;
+  });
+}
 
 export default class App extends React.Component {
   getDerivedStateFromProps(props, state) {
