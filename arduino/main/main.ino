@@ -128,6 +128,11 @@ float getHum() {
 }
 
 String getTimestamp() {
+
+  while (WiFiMulti.run() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
   
   if ((WiFiMulti.run() == WL_CONNECTED)) {
 
@@ -191,6 +196,11 @@ String getTimestamp() {
 
 void sendData(String timestamp, float temp, float hum) {
     // wait for WiFi connection
+
+  while (WiFiMulti.run() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
   if ((WiFiMulti.run() == WL_CONNECTED)) {
 
     WiFiClient client;
@@ -202,7 +212,7 @@ void sendData(String timestamp, float temp, float hum) {
     Serial.print("[HTTP] begin...\n");
     // configure traged server and url
 
-    String url = String("http://name:pass@serv/smarthome/") + String(sha1(timestamp.c_str()));
+    String url = String("http://qrlogadmin:qrlogadminpass@77.220.212.42:5984/smarthome/") + String(sha1(timestamp.c_str()));
 
     http.begin(client, url.c_str());
 
