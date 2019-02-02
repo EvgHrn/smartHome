@@ -49,53 +49,6 @@ void setup() {
 }
 
 void loop() {
-//  // wait for WiFi connection
-//  if ((WiFiMulti.run() == WL_CONNECTED)) {
-//
-//    WiFiClient client;
-//
-//    HTTPClient http;
-//
-//    Serial.print("[HTTP] begin...\n");
-//    // configure traged server and url
-//
-//
-//    http.begin(client, "http://user:pass@server/smarthome/first");
-//
-//    /*
-//      // or
-//      http.begin(client, "http://");
-//      http.setAuthorization("guest", "guest");
-//
-//      // or
-//      http.begin(client, "http://");
-//      http.setAuthorization("Z3Vlc3Q6Z3Vlc3Q=");
-//    */
-//
-//    http.addHeader("Accept", "application/json");
-//    http.addHeader("Content-Type", "application/json");
-//
-//    Serial.print("[HTTP] PUT...\n");
-//    // start connection and send HTTP header
-//    int httpCode = http.PUT("{\"description\":\"An\"}");
-//
-//    // httpCode will be negative on error
-//    if (httpCode > 0) {
-//      // HTTP header has been send and Server response header has been handled
-//      Serial.printf("[HTTP] PUT... code: %d\n", httpCode);
-//
-//      // file found at server
-//      if (httpCode == HTTP_CODE_OK) {
-//        String payload = http.getString();
-//        Serial.println(payload);
-//      }
-//    } else {
-//      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-//    }
-//
-//    http.end();
-//  }
-
   String timestamp = getTimestamp();
 
   sendData(timestamp, getTemp(), getHum());
@@ -195,8 +148,12 @@ String getTimestamp() {
 }
 
 void sendData(String timestamp, float temp, float hum) {
-    // wait for WiFi connection
 
+  if ((timestamp == "") || (temp > 100) || (hum > 100)) {
+    return;
+  }
+
+  // wait for WiFi connection
   while (WiFiMulti.run() != WL_CONNECTED) {
     Serial.print(".");
     delay(500);
