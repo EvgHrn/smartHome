@@ -1,3 +1,5 @@
+#include "../include/secret.h"
+
 #include <Arduino.h>
 
 #include <Hash.h>
@@ -44,7 +46,7 @@ void setup() {
   }
 
   WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP("thl", "12349876");
+  WiFiMulti.addAP(AP, AP_PASS);
 
 }
 
@@ -98,20 +100,12 @@ String getTimestamp() {
     http.setTimeout(10000);
 
     Serial.print("[HTTP] begin...\n");
+
     // configure traged server and url
+    String url = "http://" + String(DB_IP) + ":" + DB_PORT;
 
-
-    http.begin("http://log:pass@serv:port");
-
-    /*
-      // or
-      http.begin(client, "http://");
-      http.setAuthorization("guest", "guest");
-
-      // or
-      http.begin(client, "http://");
-      http.setAuthorization("Z3Vlc3Q6Z3Vlc3Q=");
-    */
+    http.begin(url);
+    http.setAuthorization(DB_LOG, DB_PASS);
 
     http.addHeader("Accept", "application/json");
     http.addHeader("Content-Type", "application/json");
@@ -170,21 +164,12 @@ void sendData(String timestamp, float temp, float hum) {
     http.setTimeout(10000);
 
     Serial.print("[HTTP] begin...\n");
+
     // configure traged server and url
+    String url = "http://" + String(DB_IP) + DB_PORT + "/smarthome/" + String(sha1(timestamp.c_str()));
 
-    String url = String("http://log:pass@serv:port/smarthome/") + String(sha1(timestamp.c_str()));
-
-    http.begin(url.c_str());
-
-    /*
-      // or
-      http.begin(client, "http://");
-      http.setAuthorization("guest", "guest");
-
-      // or
-      http.begin(client, "http://");
-      http.setAuthorization("Z3Vlc3Q6Z3Vlc3Q=");
-    */
+    http.begin(url);
+    http.setAuthorization(DB_LOG, DB_PASS);
 
     http.addHeader("Accept", "application/json");
     http.addHeader("Content-Type", "application/json");
