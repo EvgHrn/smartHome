@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Dimensions} from 'react-native';
 import PouchDB from 'pouchdb-react-native';
 import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
-import PureChart from 'react-native-pure-chart';
+import { LineChart } from 'react-native-chart-kit';
 
 const lastDataCount = 300;
 
@@ -74,6 +74,11 @@ export default class App extends React.Component {
   }
 
   render() {
+    const chartConfig = {
+      backgroundGradientFrom: '#1E2923',
+      backgroundGradientTo: '#08130D',
+      color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`
+    }
     return (
       <View style={styles.container}>
         <Text style={styles.header}>Date</Text>
@@ -82,12 +87,37 @@ export default class App extends React.Component {
         <Text>{this.state.data[0].temperature}</Text>
         <Text style={styles.header}>Humidity</Text>
         <Text>{this.state.data[0].humidity}</Text>
-        <PureChart
+        {/* <PureChart
           type='line'
           // data={ [ 50, 10, 40, 95, -4, -24, 85, 91, 35, 53, -53, 24, 50, -20, -80 ] }
           data={ this.state.data.map((item) => Math.round(item.temperature)) }
         >
-        </PureChart >
+        </PureChart > */}
+        <LineChart
+          // data={ {
+          //   datasets: [{
+          //     temp: this.state.data.map((item) => Math.round(item.temperature)),
+          //     // hum: this.state.data.map((item) => Math.round(item.humidity))
+          //   }]
+          // }}
+          data={{
+            labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+            datasets: [{
+              data: [
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100
+              ]
+            }]
+          }}
+          width={Dimensions.get('window').width}
+          height={220}
+          chartConfig={chartConfig}
+          bezier
+        />
       </View>
     );
   }
