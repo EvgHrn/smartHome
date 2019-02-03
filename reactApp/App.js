@@ -75,42 +75,26 @@ export default class App extends React.Component {
 
   render() {
     const chartConfig = {
-      backgroundGradientFrom: '#1E2923',
-      backgroundGradientTo: '#08130D',
+      backgroundGradientFrom: '#FFFFFF',
+      backgroundGradientTo: '#FFFFFF',
       color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`
     }
     return (
       <View style={styles.container}>
-        <Text style={styles.header}>Date</Text>
+        <Text style={[styles.header, styles.row]}>Date</Text>
         <Text>{this.state.data[0].timestamp}</Text>
-        <Text style={styles.header}>Temperature</Text>
+        <Text style={[styles.header, styles.row]}>Temperature</Text>
         <Text>{this.state.data[0].temperature}</Text>
-        <Text style={styles.header}>Humidity</Text>
+        <Text style={[styles.header, styles.row]}>Humidity</Text>
         <Text>{this.state.data[0].humidity}</Text>
-        {/* <PureChart
-          type='line'
-          // data={ [ 50, 10, 40, 95, -4, -24, 85, 91, 35, 53, -53, 24, 50, -20, -80 ] }
-          data={ this.state.data.map((item) => Math.round(item.temperature)) }
-        >
-        </PureChart > */}
         <LineChart
-          // data={ {
-          //   datasets: [{
-          //     temp: this.state.data.map((item) => Math.round(item.temperature)),
-          //     // hum: this.state.data.map((item) => Math.round(item.humidity))
-          //   }]
-          // }}
           data={{
-            labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+            labels: this.state.data.map((item) => new Date(item.timestamp)).getHours(),
             datasets: [{
-              data: [
-                Math.random() * 100,
-                Math.random() * 100,
-                Math.random() * 100,
-                Math.random() * 100,
-                Math.random() * 100,
-                Math.random() * 100
-              ]
+              data: this.state.data.map((item) => Math.round(item.temperature))
+            },
+            {
+              data: this.state.data.map((item) => Math.round(item.humidity))
             }]
           }}
           width={Dimensions.get('window').width}
@@ -129,8 +113,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 20
   },
   header: {
     color: 'gray'
+  },
+  row: {
+    paddingVertical: 20
   }
 });
