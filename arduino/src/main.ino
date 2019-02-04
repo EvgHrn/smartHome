@@ -166,7 +166,7 @@ void sendData(String timestamp, float temp, float hum) {
     Serial.print("[HTTP] begin...\n");
 
     // configure traged server and url
-    String url = "http://" + String(DB_IP) + DB_PORT + "/smarthometest2/" + String(sha1(timestamp.c_str()));
+    String url = "http://" + String(DB_IP) + ":" + DB_PORT + "/smarthome/" + String(sha1(timestamp.c_str()));
 
     http.begin(url);
     http.setAuthorization(DB_LOG, DB_PASS);
