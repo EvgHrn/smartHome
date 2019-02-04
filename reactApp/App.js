@@ -3,8 +3,8 @@ import { StyleSheet, Text, View, Dimensions, TouchableWithoutFeedback} from 'rea
 import PouchDB from 'pouchdb-react-native';
 import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
 import { LineChart } from 'react-native-chart-kit';
-import { RadioButtons } from 'react-native-radio-buttons';
-import { SegmentedControls } from 'react-native-radio-buttons'
+import { SegmentedControls } from 'react-native-radio-buttons';
+import * as moment from 'moment';
 
 const lastDataCount = 24;
 
@@ -19,7 +19,7 @@ export default class App extends React.Component {
         temperature: 0,
         humidity: 0
       }],
-      period: "Hour"
+      period: "Day"
     };
   }
 
@@ -30,14 +30,14 @@ export default class App extends React.Component {
   }).
   on('change', () => {
     console.log('Remote db changed');
-    this.getLastData();
+    this.getLastData(this.state.period);
   }).
   on('error', (err) => {
     console.log('Changes error with: ', remote_db);
     console.log(err);
   });
 
-  getLastData = () => {
+  getLastData = (period) => {
     remote_db.allDocs({
       include_docs: true,
       attachments: false
@@ -52,6 +52,14 @@ export default class App extends React.Component {
         };
         return resultObj;
       });
+      //Sort data with periods
+      allDocs.reduce((accumulator, currentValue, index, array) => {
+        if (period === "Day") {
+          let resObj = {
+
+          }
+        }
+      }, {});
       //lets sort by timestamp desc
       allDocs.sort((a, b) => {
         let dateA = new Date(a.timestamp);
@@ -80,9 +88,9 @@ export default class App extends React.Component {
 
   render() {
     const radioBtnsOptions = [
-      "Minute",
       "Hour",
-      "Day"
+      "Day",
+      "Month"
     ];
 
     setSelectedOption = (selectedOption) => {
@@ -128,7 +136,7 @@ export default class App extends React.Component {
             color: (opacity = 1) => `rgba(150, 70, 70, ${opacity})`
           }}
           width={Dimensions.get('window').width}
-          height={150}
+          height={120}
           bezier
           style={{
             marginVertical: 15
@@ -149,21 +157,16 @@ export default class App extends React.Component {
             color: (opacity = 1) => `rgba(70, 70, 150, ${opacity})`
           }}
           width={Dimensions.get('window').width}
-          height={150}
+          height={120}
           bezier
           style={{
             marginVertical: 15
           }}
         />
         <SegmentedControls
-          tint={'#405be3'}
-          backTint= {'white'}
-          selectedTint= {'#405be3'}
           options={ radioBtnsOptions }
           onSelection={ setSelectedOption.bind(this) }
-          selectedOption={this.state.period }
-          // renderOption={ renderOption }
-          // renderContainer={ renderContainer }
+          selectedOption={ this.state.period }
         />
       </View>
     );
