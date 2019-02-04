@@ -74,11 +74,6 @@ export default class App extends React.Component {
   }
 
   render() {
-    const chartConfig = {
-      backgroundGradientFrom: '#FFFFFF',
-      backgroundGradientTo: '#FFFFFF',
-      color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`
-    }
     return (
       <View style={styles.container}>
         <Text style={[styles.header, styles.row]}>Date</Text>
@@ -91,26 +86,42 @@ export default class App extends React.Component {
           data={{
             labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
             datasets: [{
-              data: this.state.data.map((item) => Math.round(item.temperature))
+              data: this.state.data.map((item) => item.temperature)
             }]
+          }}
+          chartConfig = {{
+            decimalPlaces: 2,
+            backgroundGradientFrom: '#FFFFFF',
+            backgroundGradientTo: '#FFFFFF',
+            color: (opacity = 1) => `rgba(150, 70, 70, ${opacity})`
           }}
           width={Dimensions.get('window').width}
           height={150}
-          chartConfig={chartConfig}
           bezier
+          style={{
+            marginVertical: 8
+          }}
         />
         <LineChart
           data={{
             labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
             datasets: [
             {
-              data: this.state.data.map((item) => Math.round(item.humidity))
+              data: this.state.data.map((item) => item.humidity)
             }]
+          }}
+          chartConfig = {{
+            decimalPlaces: 2,
+            backgroundGradientFrom: '#FFFFFF',
+            backgroundGradientTo: '#FFFFFF',
+            color: (opacity = 1) => `rgba(70, 70, 150, ${opacity})`
           }}
           width={Dimensions.get('window').width}
           height={150}
-          chartConfig={chartConfig}
           bezier
+          style={{
+            marginVertical: 8
+          }}
         />
       </View>
     );
