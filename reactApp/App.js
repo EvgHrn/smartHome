@@ -13,9 +13,9 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       data: [{
-        timestamp:"",
-        temperature: "",
-        humidity: ""
+        timestamp:"Mon, 04 Feb 2019 10:48:53 GMT",
+        temperature: 0,
+        humidity: 0
       }]
     };
   }
@@ -89,16 +89,26 @@ export default class App extends React.Component {
         <Text>{this.state.data[0].humidity}</Text>
         <LineChart
           data={{
-            labels: this.state.data.map((item) => new Date(item.timestamp)).getHours(),
+            labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
             datasets: [{
               data: this.state.data.map((item) => Math.round(item.temperature))
-            },
+            }]
+          }}
+          width={Dimensions.get('window').width}
+          height={150}
+          chartConfig={chartConfig}
+          bezier
+        />
+        <LineChart
+          data={{
+            labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
+            datasets: [
             {
               data: this.state.data.map((item) => Math.round(item.humidity))
             }]
           }}
           width={Dimensions.get('window').width}
-          height={220}
+          height={150}
           chartConfig={chartConfig}
           bezier
         />
