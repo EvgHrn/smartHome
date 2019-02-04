@@ -1,10 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions} from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TouchableWithoutFeedback} from 'react-native';
 import PouchDB from 'pouchdb-react-native';
 import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
 import { LineChart } from 'react-native-chart-kit';
+import { RadioButtons } from 'react-native-radio-buttons';
+import { SegmentedControls } from 'react-native-radio-buttons'
 
-const lastDataCount = 300;
+const lastDataCount = 24;
 
 let remote_db = new PouchDB(`http://${DB_LOG}:${DB_PASS}@${DB_IP}:${DB_PORT}/smarthome`);
 
@@ -16,7 +18,8 @@ export default class App extends React.Component {
         timestamp:"Mon, 04 Feb 2019 10:48:53 GMT",
         temperature: 0,
         humidity: 0
-      }]
+      }],
+      period: "Hour"
     };
   }
 
@@ -69,24 +72,53 @@ export default class App extends React.Component {
     }.bind(this));
   }
 
+  
+
   componentDidMount() {
     console.log('App did mount');
   }
 
   render() {
+    const radioBtnsOptions = [
+      "Minute",
+      "Hour",
+      "Day"
+    ];
+
+    setSelectedOption = (selectedOption) => {
+      console.log("Radiobutton pressed. Response: ", selectedOption);
+      this.setState({
+        period: selectedOption
+      });
+    }
+  
+    renderOption = (option, selected, onSelect, index) => {
+      const style = selected ? { fontWeight: 'bold'} : {};
+  
+      return (
+        <TouchableWithoutFeedback onPress={onSelect} key={index}>
+          <Text style={style}>{option}</Text>
+        </TouchableWithoutFeedback>
+      );
+    }
+  
+    renderContainer = (optionNodes) => {
+      return <View>{optionNodes}</View>;
+    }
+
     return (
       <View style={styles.container}>
         <Text style={[styles.header, styles.row]}>Date</Text>
-        <Text>{this.state.data[0].timestamp}</Text>
+        <Text>{new Date(this.state.data[0].timestamp).toLocaleString()}</Text>
         <Text style={[styles.header, styles.row]}>Temperature</Text>
         <Text>{this.state.data[0].temperature}</Text>
         <Text style={[styles.header, styles.row]}>Humidity</Text>
         <Text>{this.state.data[0].humidity}</Text>
         <LineChart
           data={{
-            labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
+            // labels: this.state.data.map((item) => parseFloat(new Date(item.timestamp).getHours())),
             datasets: [{
-              data: this.state.data.map((item) => item.temperature)
+              data: this.state.data.map((item) => parseFloat(item.temperature))
             }]
           }}
           chartConfig = {{
@@ -99,15 +131,15 @@ export default class App extends React.Component {
           height={150}
           bezier
           style={{
-            marginVertical: 8
+            marginVertical: 15
           }}
         />
         <LineChart
           data={{
-            labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
+            // labels: this.state.data.map((item) => parseFloat(new Date(item.timestamp).getHours())),
             datasets: [
             {
-              data: this.state.data.map((item) => item.humidity)
+              data: this.state.data.map((item) => parseFloat(item.humidity))
             }]
           }}
           chartConfig = {{
@@ -120,8 +152,18 @@ export default class App extends React.Component {
           height={150}
           bezier
           style={{
-            marginVertical: 8
+            marginVertical: 15
           }}
+        />
+        <SegmentedControls
+          tint={'#405be3'}
+          backTint= {'white'}
+          selectedTint= {'#405be3'}
+          options={ radioBtnsOptions }
+          onSelection={ setSelectedOption.bind(this) }
+          selectedOption={this.state.period }
+          // renderOption={ renderOption }
+          // renderContainer={ renderContainer }
         />
       </View>
     );
@@ -140,6 +182,6 @@ const styles = StyleSheet.create({
     color: 'gray'
   },
   row: {
-    paddingVertical: 20
+    paddingVertical: 10
   }
 });
