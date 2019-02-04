@@ -5,3 +5,12 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 secret.h
+node_modules/**/*
+.expo/*
+npm-debug.*
+*.jks
+*.p12
+*.key
+*.mobileprovision
+.env
+
