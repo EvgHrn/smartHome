@@ -4,9 +4,7 @@ import PouchDB from 'pouchdb-react-native';
 import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
 import { LineChart } from 'react-native-chart-kit';
 import { SegmentedControls } from 'react-native-radio-buttons';
-import * as moment from 'moment';
-
-const lastDataCount = 24;
+import moment from 'moment';
 
 let remote_db = new PouchDB(`http://${DB_LOG}:${DB_PASS}@${DB_IP}:${DB_PORT}/smarthome`);
 
@@ -52,52 +50,141 @@ export default class App extends React.Component {
         };
         return resultObj;
       });
-      //Sort data with periods
-      allDocs.reduce((accumulator, currentValue, index, array) => {
-        if (period === "Day") {
-          let resObj = {
+      console.log('All docs length:', allDocs.length);
 
-          }
-        }
-      }, {});
-      //lets sort by timestamp desc
-      allDocs.sort((a, b) => {
+      //Collect data with periods
+      let sourceDataObj;
+      switch (period) {
+        case "Day": 
+          sourceDataObj = allDocs.reduce((accumulator, currentValue) => {
+            let currTimeMomentObj = moment(currentValue.timestamp);
+            let startOfHourStr = currTimeMomentObj.startOf('hour').toDate().toString();
+            if (startOfHourStr in accumulator) {
+              accumulator[startOfHourStr].temps.push(currentValue.temperature);
+              accumulator[startOfHourStr].hums.push(currentValue.humidity);
+            } else {
+              accumulator[startOfHourStr] = {
+                temps: [currentValue.temperature],
+                hums: [currentValue.humidity]
+              };
+            };
+            return accumulator;
+          }, {});
+          break;
+        case "Week": 
+        case "Month": 
+          sourceDataObj = allDocs.reduce((accumulator, currentValue, index, array) => {
+            let currTimeMomentObj = moment(currentValue.timestamp);
+            let startOfDayStr = currTimeMomentObj.startOf('day').toDate().toString();
+            if (startOfDayStr in accumulator) {
+              accumulator[startOfDayStr].temps.push(currentValue.temperature);
+              accumulator[startOfDayStr].hums.push(currentValue.humidity);
+            } else {
+              accumulator[startOfDayStr] = {
+                temps: [currentValue.temperature],
+                hums: [currentValue.humidity]
+              }
+            };
+            return accumulator;
+          }, {});
+        break;
+        case "Hour": 
+          sourceDataObj = allDocs.reduce((accumulator, currentValue, index, array) => {
+            let currTimeMomentObj = moment(currentValue.timestamp);
+            let startOfMinuteStr = currTimeMomentObj.startOf('minute').toDate().toString();
+            if (startOfMinuteStr in accumulator) {
+              accumulator[startOfMinuteStr].temps.push(currentValue.temperature);
+              accumulator[startOfMinuteStr].hums.push(currentValue.humidity);
+            } else {
+              accumulator[startOfMinuteStr] = {
+                temps: [currentValue.temperature],
+                hums: [currentValue.humidity]
+              }
+            };
+            return accumulator;
+          }, {});
+          break;
+        default:
+        break;
+      }
+
+      console.log('sourceDataObj keys count: ', Object.keys(sourceDataObj).length);
+
+      //Average collected data and make data array
+      let dataArr = [];
+      for (var key in sourceDataObj) {
+        let tempsArr = sourceDataObj[key].temps;
+        let humsArr = sourceDataObj[key].hums;
+        let averageTemp = tempsArr.reduce((acc, curr) => acc + parseFloat(curr), 0.0)/tempsArr.length;
+        let averageHum = humsArr.reduce((acc, curr) => acc + parseFloat(curr), 0.0)/humsArr.length;
+        dataArr.push({
+          timestamp: key,
+          temperature: averageTemp.toFixed(2),
+          humidity: averageHum.toFixed(2)
+        });
+      }
+      console.log('dataArr length: ', dataArr.length);
+
+      //sort by timestamp desc
+      dataArr.sort((a, b) => {
         let dateA = new Date(a.timestamp);
         let dateB = new Date(b.timestamp);
         return dateB - dateA;
       });
+
       //get just peace of data
-      if (allDocs.length > lastDataCount) {
-        allDocs.splice(lastDataCount);
+      let lastDataCount;
+      switch (this.state.period) {
+        case "Hour":
+          lastDataCount = 60;
+          break;
+        case "Day":
+          lastDataCount = 24;
+          break;
+        case "Week":
+          lastDataCount = 7;
+          break;
+        case "Month":
+          lastDataCount = 30;
+          break;
+        default:
+          break;
+      }
+      if (dataArr.length > lastDataCount) {
+        dataArr.splice(lastDataCount);
       }
       this.setState(() => (
         {
-          data: allDocs
+          data: dataArr
         }
       ));
-      console.log('State updated');
+      console.log('Save new data to state with length: ', dataArr.length);
       // console.log(this.state.data);
     }.bind(this));
   }
 
-  
+  componentDidUpdate(props, state) {
+    console.log("componentDidUpdate");
+  }
 
   componentDidMount() {
-    console.log('App did mount');
+    console.log('App did mount and state update with new data');
+    this.getLastData(this.state.period);
   }
 
   render() {
     const radioBtnsOptions = [
       "Hour",
       "Day",
+      "Week",
       "Month"
     ];
 
     setSelectedOption = (selectedOption) => {
-      console.log("Radiobutton pressed. Response: ", selectedOption);
       this.setState({
         period: selectedOption
       });
+      console.log("Radiobutton pressed. Period from state: ", this.state.period);
     }
   
     renderOption = (option, selected, onSelect, index) => {
@@ -124,7 +211,7 @@ export default class App extends React.Component {
         <Text>{this.state.data[0].humidity}</Text>
         <LineChart
           data={{
-            // labels: this.state.data.map((item) => parseFloat(new Date(item.timestamp).getHours())),
+            // labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
             datasets: [{
               data: this.state.data.map((item) => parseFloat(item.temperature))
             }]
