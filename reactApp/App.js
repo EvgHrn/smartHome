@@ -32,8 +32,16 @@ export default class App extends React.Component {
     include_docs: true
   }).
   on('change', (change) => {
-    console.log('Remote db changed: ', change);
-    this.getLastDataToState();
+    console.log('Remote db changed: ', change.doc);
+    let newRoughData = this.state.roughData;
+    newRoughData.push({
+      timestamp: change.doc.timestamp,
+      temperature: change.doc.temperature,
+      humidity: change.doc.humidity
+    });
+    this.setState({
+      roughData: newRoughData
+    });
   }).
   on('error', (err) => {
     console.log('Changes error with: ', remote_db);
