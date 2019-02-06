@@ -19,7 +19,7 @@ export default class App extends React.Component {
         humidity: 0
       }],
       period: "Day",
-      firstDataCalculating: false
+      progress: false
     };
   }
 
