@@ -7,6 +7,7 @@ import { SegmentedControls } from 'react-native-radio-buttons';
 import moment from 'moment';
 
 let remote_db = new PouchDB(`http://${DB_LOG}:${DB_PASS}@${DB_IP}:${DB_PORT}/smarthome`);
+let local_db = new PouchDB('smarthome');
 
 export default class App extends React.Component {
   constructor(props) {
@@ -26,27 +27,66 @@ export default class App extends React.Component {
     };
   }
 
-  remoteChanges = remote_db.changes({
-    since: 'now',
+  rep = PouchDB.replicate(remote_db, local_db, {
     live: true,
-    include_docs: true
-  }).
-  on('change', (change) => {
-    console.log('Remote db changed: ', change.doc);
+    retry: true
+  }).on('change', function (info) {
+    // handle change
+    console.log('Remote db changed. New docs: ', info.docs);
     let newRoughData = this.state.roughData;
-    newRoughData.push({
-      timestamp: change.doc.timestamp,
-      temperature: change.doc.temperature,
-      humidity: change.doc.humidity
+    info.docs.map((currentValue) => {
+      newRoughData.push({
+        timestamp: currentValue.timestamp,
+        temperature: currentValue.temperature,
+        humidity: currentValue.humidity
+      });
     });
     this.setState({
       roughData: newRoughData
     });
-  }).
-  on('error', (err) => {
-    console.log('Changes error with: ', remote_db);
-    console.log(err);
+    this.mergeDataByPeriodToState();
+  }).on('paused', function (err) {
+    // replication paused (e.g. replication up to date, user went offline)
+    console.log('Replication paused');
+  }).on('active', function () {
+    // replicate resumed (e.g. new changes replicating, user went back online)
+    console.log('Replication active');
+  }).on('denied', function (err) {
+    // a document failed to replicate (e.g. due to permissions)
+    console.log('Replication denied with error: ', err);
+  }).on('complete', function (info) {
+    // handle complete
+    console.log('Replication complete');
+  }).on('error', function (err) {
+    // handle error
+    console.log('Replication error: ', err);
   });
+
+  // remoteChanges = remote_db.changes({
+  //   since: 'now',
+  //   live: true,
+  //   include_docs: true
+  // }).
+  // on('change', (change) => {
+  //   console.log('Remote db changed: ', change.doc);
+  //   let newRoughData = this.state.roughData;
+  //   newRoughData.push({
+  //     timestamp: change.doc.timestamp,
+  //     temperature: change.doc.temperature,
+  //     humidity: change.doc.humidity
+  //   });
+  //   this.setState({
+  //     roughData: newRoughData
+  //   });
+  // }).
+  // on('error', (err) => {
+  //   console.log('Changes error with: ', remote_db);
+  //   console.log(err);
+  // });
+
+  localDbToState() {
+    this.getLastDataToState(local_db);
+  }
 
   mergeDataByPeriodToState() {
     const period = this.state.period;
@@ -156,8 +196,8 @@ export default class App extends React.Component {
     ));
   }
 
-  getLastDataToState() {
-    remote_db.allDocs({
+  getRoughLocalDataToState() {
+    local_db.allDocs({
       include_docs: true,
       attachments: false
     }, (err, response) => {
@@ -179,7 +219,7 @@ export default class App extends React.Component {
 
   componentDidMount() {
     console.log('App did mount and state update with new data');
-    this.getLastDataToState();
+    this.getRoughLocalDataToState();
     this.mergeDataByPeriodToState();
   }
 
@@ -196,7 +236,7 @@ export default class App extends React.Component {
         period: selectedOption
       });
       this.mergeDataByPeriodToState();
-      // console.log("Radiobutton pressed. Period from state: ", this.state.period);
+      console.log("Radiobutton pressed: ", selectedOption);
     }
   
     renderOption = (option, selected, onSelect, index) => {
