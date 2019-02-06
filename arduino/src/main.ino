@@ -52,10 +52,8 @@ void setup() {
 
 void loop() {
   String timestamp = getTimestamp();
-
   sendData(timestamp, getTemp(), getHum());
-  
-  delay(10000);
+  delay(60000);
 }
 
 float getTemp() {
@@ -65,9 +63,7 @@ float getTemp() {
     Serial.println(F("Failed to read from DHT sensor!"));
     return 999;
   }
-  else {
-    return t;
-  }
+  return t;
 }
 
 float getHum() {
