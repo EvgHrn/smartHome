@@ -1,3 +1,4 @@
+#include "../include/tft.h"
 #include "../include/secret.h"
 
 #include <Arduino.h>
@@ -31,7 +32,6 @@ char buffer[100];
 void setup() {
 
   Serial.begin(115200);
-  // Serial.setDebugOutput(true);
 
   dht.begin();
 
@@ -48,34 +48,40 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(AP, AP_PASS);
 
+  tftSetup();
 }
 
 void loop() {
   String timestamp = getTimestamp();
-  sendData(timestamp, getTemp(), getHum());
+  float temp = getTemp();
+  float hum = getHum();
+  tftShowData(timestamp, temp, hum);
+  sendData(timestamp, temp, hum);
   delay(60000);
 }
 
 float getTemp() {
-  delay(500);
   float t = dht.readTemperature();
   if (isnan(t)) {
     Serial.println(F("Failed to read from DHT sensor!"));
+    tftShowInfo("Failed to read from DHT sensor!");
     return 999;
   }
+  Serial.print(F("Temperature: "));
+  Serial.println(t);
   return t;
 }
 
 float getHum() {
-  delay(500);
   float h = dht.readHumidity();
   if (isnan(h)) {
     Serial.println(F("Failed to read from DHT sensor!"));
+    tftShowInfo("Failed to read from DHT sensor!");
     return 999;
   }
-  else {
-    return h;
-  }
+  Serial.print(F("Humidity: "));
+  Serial.println(h);
+  return h;
 }
 
 String getTimestamp() {
@@ -84,10 +90,12 @@ String getTimestamp() {
 
   while (WiFiMulti.run() != WL_CONNECTED) {
     Serial.print(".");
-    delay(500);
+    tftShowInfo("WiFi disconnect");
+    delay(1000);
   }
   
   if ((WiFiMulti.run() == WL_CONNECTED)) {
+    tftShowInfo("WiFi connected");
 
     // WiFiClient client;
 
@@ -117,6 +125,8 @@ String getTimestamp() {
     if (httpCode > 0) {
       // HTTP header has been send and Server response header has been handled
       Serial.printf("[HTTP] GET code: %d\n", httpCode);
+      sprintf(buffer,"%s%i", "HTTP GET code: ", httpCode);
+      tftShowInfo(buffer);
 
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
@@ -132,6 +142,8 @@ String getTimestamp() {
     } else {
       Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
       Serial.println();
+      sprintf(buffer,"%s%i", "HTTP GET fauled with error: ", httpCode);
+      tftShowInfo(buffer);
     }
     
     http.end();
@@ -149,12 +161,11 @@ void sendData(String timestamp, float temp, float hum) {
   // wait for WiFi connection
   while (WiFiMulti.run() != WL_CONNECTED) {
     Serial.print(".");
-    delay(500);
+    tftShowInfo("WiFi disconnect");
+    delay(1000);
   }
   if ((WiFiMulti.run() == WL_CONNECTED)) {
-
-    // WiFiClient client;
-
+    tftShowInfo("WiFi connected");
     HTTPClient http;
 
     http.setTimeout(20000);
@@ -174,8 +185,6 @@ void sendData(String timestamp, float temp, float hum) {
 
     String data = String("{\"timestamp\":\"") + timestamp + String("\",\"temperature\":\"") + temp + String("\",\"humidity\":\"") + hum + String("\"}");
 
-//    sprintf(buffer, "Aconcagua is %d metres height.", height);
-
     Serial.print("Data to PUT: ");
     Serial.println(data.c_str());
     
@@ -186,6 +195,8 @@ void sendData(String timestamp, float temp, float hum) {
     if (httpCode > 0) {
       // HTTP header has been send and Server response header has been handled
       Serial.printf("[HTTP] PUT... code: %d\n", httpCode);
+      sprintf(buffer,"%s%i", "HTTP PUT... code: ", httpCode);
+      tftShowInfo(buffer);
 
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
@@ -194,6 +205,8 @@ void sendData(String timestamp, float temp, float hum) {
       }
     } else {
       Serial.printf("[HTTP] PUT... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      sprintf(buffer,"%s%i", "HTTP PUT... failed, error: ", httpCode);
+      tftShowInfo(buffer);
     }
     Serial.println();
     http.end();
