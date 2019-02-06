@@ -29,7 +29,8 @@ export default class App extends React.Component {
 
   rep = PouchDB.replicate(remote_db, local_db, {
     live: true,
-    retry: true
+    retry: true,
+    batch_size: 5000
   }).on('change', function (info) {
     // handle change
     console.log('Remote db changed. New docs: ', info.docs);
