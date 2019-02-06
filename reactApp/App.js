@@ -19,11 +19,7 @@ export default class App extends React.Component {
         humidity: 0
       }],
       period: "Day",
-      renderData:[{
-        timestamp:"Mon, 04 Feb 2019 10:48:53 GMT",
-        temperature: 0,
-        humidity: 0
-      }]
+      firstDataCalculating: false
     };
   }
 
@@ -45,7 +41,6 @@ export default class App extends React.Component {
     this.setState({
       roughData: newRoughData
     });
-    this.mergeDataByPeriodToState();
   }).on('paused', function (err) {
     // replication paused (e.g. replication up to date, user went offline)
     console.log('Replication paused');
@@ -63,39 +58,19 @@ export default class App extends React.Component {
     console.log('Replication error: ', err);
   });
 
-  // remoteChanges = remote_db.changes({
-  //   since: 'now',
-  //   live: true,
-  //   include_docs: true
-  // }).
-  // on('change', (change) => {
-  //   console.log('Remote db changed: ', change.doc);
-  //   let newRoughData = this.state.roughData;
-  //   newRoughData.push({
-  //     timestamp: change.doc.timestamp,
-  //     temperature: change.doc.temperature,
-  //     humidity: change.doc.humidity
-  //   });
-  //   this.setState({
-  //     roughData: newRoughData
-  //   });
-  // }).
-  // on('error', (err) => {
-  //   console.log('Changes error with: ', remote_db);
-  //   console.log(err);
-  // });
-
   localDbToState() {
     this.getLastDataToState(local_db);
   }
 
-  mergeDataByPeriodToState() {
+  mergeDataByPeriod() {
+    console.log('Start to merge rough data');
     const period = this.state.period;
-
+    console.log('Period from state: ', period);
     //Collect data with periods
     let sourceDataObj;
     switch (period) {
       case "Day": 
+        console.log('Start to calculaet rough data with period Day');
         sourceDataObj = this.state.roughData.reduce((accumulator, currentValue) => {
           let currTimeMomentObj = moment(currentValue.timestamp);
           let startOfHourStr = currTimeMomentObj.startOf('hour').toDate().toString();
@@ -113,6 +88,7 @@ export default class App extends React.Component {
         break;
       case "Week": 
       case "Month": 
+        console.log('Start to calculaet rough data with period Month or Week');
         sourceDataObj = this.state.roughData.reduce((accumulator, currentValue, index, array) => {
           let currTimeMomentObj = moment(currentValue.timestamp);
           let startOfDayStr = currTimeMomentObj.startOf('day').toDate().toString();
@@ -129,6 +105,7 @@ export default class App extends React.Component {
         }, {});
       break;
       case "Hour": 
+        console.log('Start to calculaet rough data with period Hour');
         sourceDataObj = this.state.roughData.reduce((accumulator, currentValue, index, array) => {
           let currTimeMomentObj = moment(currentValue.timestamp);
           let startOfMinuteStr = currTimeMomentObj.startOf('minute').toDate().toString();
@@ -190,11 +167,9 @@ export default class App extends React.Component {
     if (dataArr.length > lastDataCount) {
       dataArr.splice(lastDataCount);
     }
-    this.setState(() => (
-      {
-        renderData: dataArr
-      }
-    ));
+    console.log('Finish to merge rough data to renderdata');
+    console.log('Length of new renderdata : ', dataArr.length);
+    return dataArr;
   }
 
   getRoughLocalDataToState() {
@@ -219,12 +194,12 @@ export default class App extends React.Component {
   }
 
   componentDidMount() {
-    console.log('App did mount and state update with new data');
+    console.log('App did mount and state update with local_db data');
     this.getRoughLocalDataToState();
-    this.mergeDataByPeriodToState();
   }
 
   render() {
+    const renderData = this.mergeDataByPeriod();
     const radioBtnsOptions = [
       "Hour",
       "Day",
@@ -236,7 +211,6 @@ export default class App extends React.Component {
       this.setState({
         period: selectedOption
       });
-      this.mergeDataByPeriodToState();
       console.log("Radiobutton pressed: ", selectedOption);
     }
   
@@ -257,16 +231,16 @@ export default class App extends React.Component {
     return (
       <View style={styles.container}>
         <Text style={[styles.header, styles.row]}>Date</Text>
-        <Text>{new Date(this.state.renderData[0].timestamp).toLocaleString()}</Text>
+        <Text>{new Date(renderData[0].timestamp).toLocaleString()}</Text>
         <Text style={[styles.header, styles.row]}>Temperature</Text>
-        <Text>{this.state.renderData[0].temperature}</Text>
+        <Text>{renderData[0].temperature}</Text>
         <Text style={[styles.header, styles.row]}>Humidity</Text>
-        <Text>{this.state.renderData[0].humidity}</Text>
+        <Text>{renderData[0].humidity}</Text>
         <LineChart
           data={{
             // labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
             datasets: [{
-              data: this.state.renderData.map((item) => parseFloat(item.temperature))
+              data: renderData.map((item) => parseFloat(item.temperature))
             }]
           }}
           chartConfig = {{
@@ -286,7 +260,7 @@ export default class App extends React.Component {
           data={{
             // labels: this.state.data.map((item) => parseFloat(new Date(item.timestamp).getHours())),
             datasets: [{
-              data: this.state.renderData.map((item) => parseFloat(item.humidity))
+              data: renderData.map((item) => parseFloat(item.humidity))
             }]
           }}
           chartConfig = {{
