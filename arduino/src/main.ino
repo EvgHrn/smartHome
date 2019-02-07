@@ -2,25 +2,17 @@
 #include "../include/secret.h"
 
 #include <Arduino.h>
-
 #include <Hash.h>
-
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
-
 #include <ESP8266HTTPClient.h>
-
 #include <WiFiClient.h>
 
 #include <DHT.h>
 
 #define DHTPIN 5
-
 #define DHTTYPE    DHT21
 
 DHT dht(DHTPIN, DHTTYPE);
-
-ESP8266WiFiMulti WiFiMulti;
 
 int temp = 99;
 
@@ -45,8 +37,8 @@ void setup() {
     delay(1000);
   }
 
+  WiFi.setAutoConnect(true);
   WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP(AP, AP_PASS);
 
   tftSetup();
 }
@@ -85,19 +77,17 @@ float getHum() {
 }
 
 String getTimestamp() {
-
   String headerDate = "";
 
-  while (WiFiMulti.run() != WL_CONNECTED) {
+  WiFi.begin(AP, AP_PASS);
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     tftShowInfo("WiFi disconnect");
     delay(1000);
   }
   
-  if ((WiFiMulti.run() == WL_CONNECTED)) {
+  if (WiFi.status() == WL_CONNECTED) {
     tftShowInfo("WiFi connected");
-
-    // WiFiClient client;
 
     HTTPClient http;
 
@@ -155,16 +145,17 @@ String getTimestamp() {
 void sendData(String timestamp, float temp, float hum) {
 
   if ((timestamp == "") || (temp > 100) || (hum > 100)) {
+    tftShowInfo("Wrong data");
     return;
   }
-
+  WiFi.begin(AP, AP_PASS);
   // wait for WiFi connection
-  while (WiFiMulti.run() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     tftShowInfo("WiFi disconnect");
     delay(1000);
   }
-  if ((WiFiMulti.run() == WL_CONNECTED)) {
+  if (WiFi.status() == WL_CONNECTED) {
     tftShowInfo("WiFi connected");
     HTTPClient http;
 
