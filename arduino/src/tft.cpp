@@ -29,14 +29,17 @@ void tftShowData(String timestamp, float temp, float hum) {
     tft.drawString(humStr,              160, 90, GFXFF);
 } 
 
-void tftShowInfo(char *info) {
+void tftShowInfo(char *info, int row) {
     Serial.print("tftShowInfo get info char string: ");
     Serial.println(info);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setFreeFont(FF17);                 // Select the font
-    tft.drawString("                                                  ", 10, 150, GFXFF);
+    tft.drawString("                                                  ", 10, (130 + 20*row), GFXFF);
+    if (row == 1) {
+        tft.drawString("                                                  ", 10, (130 + 20*2), GFXFF);
+    }
     // Set text colour to orange with black background
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setFreeFont(FF17);                 // Select the font
-    tft.drawString(info, 10, 150, GFXFF);
+    tft.drawString(info, 10, (130 + 20*row), GFXFF);
 }

@@ -63,14 +63,14 @@ export default class App extends React.Component {
   }
 
   mergeDataByPeriod() {
-    console.log('Start to merge rough data');
+    console.log('Start to merge data with period ');
     const period = this.state.period;
     console.log('Period from state: ', period);
     //Collect data with periods
     let sourceDataObj;
     switch (period) {
       case "Day": 
-        console.log('Start to calculaet rough data with period Day');
+        console.log('Day');
         sourceDataObj = this.state.roughData.reduce((accumulator, currentValue) => {
           let currTimeMomentObj = moment(currentValue.timestamp);
           let startOfHourStr = currTimeMomentObj.startOf('hour').toDate().toString();
@@ -88,7 +88,7 @@ export default class App extends React.Component {
         break;
       case "Week": 
       case "Month": 
-        console.log('Start to calculaet rough data with period Month or Week');
+        console.log('Week or Month');
         sourceDataObj = this.state.roughData.reduce((accumulator, currentValue, index, array) => {
           let currTimeMomentObj = moment(currentValue.timestamp);
           let startOfDayStr = currTimeMomentObj.startOf('day').toDate().toString();
@@ -105,7 +105,7 @@ export default class App extends React.Component {
         }, {});
       break;
       case "Hour": 
-        console.log('Start to calculaet rough data with period Hour');
+        console.log('Hour');
         sourceDataObj = this.state.roughData.reduce((accumulator, currentValue, index, array) => {
           let currTimeMomentObj = moment(currentValue.timestamp);
           let startOfMinuteStr = currTimeMomentObj.startOf('minute').toDate().toString();
@@ -168,7 +168,6 @@ export default class App extends React.Component {
       dataArr.splice(lastDataCount);
     }
     console.log('Finish to merge rough data to renderdata');
-    console.log('Length of new renderdata : ', dataArr.length);
     return dataArr;
   }
 
@@ -200,6 +199,8 @@ export default class App extends React.Component {
 
   render() {
     const renderData = this.mergeDataByPeriod();
+    console.log('Length of new renderdata : ', renderData.length)
+    console.log('Render');
     const radioBtnsOptions = [
       "Hour",
       "Day",
