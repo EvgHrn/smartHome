@@ -43,7 +43,7 @@ export default class App extends React.Component {
     });
   }).on('paused', function (err) {
     // replication paused (e.g. replication up to date, user went offline)
-    console.log('Replication paused');
+    console.log('Replication paused: ', err);
   }).on('active', function () {
     // replicate resumed (e.g. new changes replicating, user went back online)
     console.log('Replication active');
