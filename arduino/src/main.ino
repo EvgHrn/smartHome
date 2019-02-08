@@ -48,7 +48,13 @@ void loop() {
   float temp = getTemp();
   float hum = getHum();
   tftShowData(timestamp, temp, hum);
-  sendData(timestamp, temp, hum);
+  if  (timestamp == "") {
+    tftShowInfo("Wrong timestamp", 1);
+  } else if ((temp < 100) && (hum < 100)) {
+    sendData(timestamp, temp, hum);
+  } else {
+    tftShowInfo("Wrong temp or hum", 1);
+  }
   delay(60000);
 }
 
@@ -99,6 +105,8 @@ String getTimestamp() {
     // configure traged server and url
     String url = "http://" + String(DB_IP) + ":" + DB_PORT;
 
+    // String url = "https://www.google.com/";
+
     http.begin(url);
     http.setAuthorization(DB_LOG, DB_PASS);
 
@@ -146,6 +154,7 @@ String getTimestamp() {
 void sendData(String timestamp, float temp, float hum) {
 
   if ((timestamp == "") || (temp > 100) || (hum > 100)) {
+    tftShowInfo("Wrong data", 1);
     tftShowInfo("Wrong data", 1);
     return;
   }
