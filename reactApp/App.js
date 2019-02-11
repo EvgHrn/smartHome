@@ -29,18 +29,7 @@ export default class App extends React.Component {
     batch_size: 5000
   }).on('change', function (info) {
     // handle change
-    console.log('Remote db changed. New docs: ', info.docs);
-    let newRoughData = this.state.roughData;
-    info.docs.map((currentValue) => {
-      newRoughData.push({
-        timestamp: currentValue.timestamp,
-        temperature: currentValue.temperature,
-        humidity: currentValue.humidity
-      });
-    });
-    this.setState({
-      roughData: newRoughData
-    });
+    console.log('Remote db changed');
   }).on('paused', function (err) {
     // replication paused (e.g. replication up to date, user went offline)
     console.log('Replication paused: ', err);
@@ -56,6 +45,35 @@ export default class App extends React.Component {
   }).on('error', function (err) {
     // handle error
     console.log('Replication error: ', err);
+  });
+
+  localChanges = local_db.changes({
+    since: 'now',
+    live: true,
+    include_docs: true
+  }).on('change', (change) => {
+    // change.id contains the doc id, change.doc contains the doc
+    console.log('Local db changed');
+    if (change.deleted) {
+      // document was deleted
+      console.log('Something was deleted from db');
+      return;
+    } else {
+      // document was added/modified
+      console.log('New doc was added to loacldb: ', change.doc);
+      let newRoughData = this.state.roughData;
+      newRoughData.push({
+        timestamp: change.doc.timestamp,
+        temperature: change.doc.temperature,
+        humidity: change.doc.humidity
+      });
+      this.setState({
+        roughData: newRoughData
+      });
+    }
+  }).on('error', function (err) {
+    // handle errors
+    console.log('Error while change local db: ', err);
   });
 
   localDbToState() {
