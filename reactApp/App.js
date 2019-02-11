@@ -2,9 +2,9 @@ import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TouchableWithoutFeedback} from 'react-native';
 import PouchDB from 'pouchdb-react-native';
 import { DB_LOG, DB_PASS, DB_IP, DB_PORT } from 'react-native-dotenv';
-import { LineChart } from 'react-native-chart-kit';
 import { SegmentedControls } from 'react-native-radio-buttons';
 import moment from 'moment';
+import { Charts } from './components/Charts';
 
 let remote_db = new PouchDB(`http://${DB_LOG}:${DB_PASS}@${DB_IP}:${DB_PORT}/smarthome`);
 let local_db = new PouchDB('smarthome');
@@ -237,46 +237,7 @@ export default class App extends React.Component {
         <Text>{renderData[0].temperature}</Text>
         <Text style={[styles.header, styles.row]}>Humidity</Text>
         <Text>{renderData[0].humidity}</Text>
-        <LineChart
-          data={{
-            // labels: this.state.data.map((item) => new Date(item.timestamp).getHours()),
-            datasets: [{
-              data: renderData.map((item) => parseFloat(item.temperature))
-            }]
-          }}
-          chartConfig = {{
-            decimalPlaces: 2,
-            backgroundGradientFrom: '#FFFFFF',
-            backgroundGradientTo: '#FFFFFF',
-            color: (opacity = 1) => `rgba(150, 70, 70, ${opacity})`
-          }}
-          width={Dimensions.get('window').width}
-          height={120}
-          bezier
-          style={{
-            marginVertical: 15
-          }}
-        />
-        <LineChart
-          data={{
-            // labels: this.state.data.map((item) => parseFloat(new Date(item.timestamp).getHours())),
-            datasets: [{
-              data: renderData.map((item) => parseFloat(item.humidity))
-            }]
-          }}
-          chartConfig = {{
-            decimalPlaces: 2,
-            backgroundGradientFrom: '#FFFFFF',
-            backgroundGradientTo: '#FFFFFF',
-            color: (opacity = 1) => `rgba(70, 70, 150, ${opacity})`
-          }}
-          width={Dimensions.get('window').width}
-          height={120}
-          bezier
-          style={{
-            marginVertical: 15
-          }}
-        />
+        <Charts renderData={renderData}/>
         <SegmentedControls
           options={ radioBtnsOptions }
           onSelection={ setSelectedOption.bind(this) }
